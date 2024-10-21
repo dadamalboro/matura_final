@@ -20,10 +20,12 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]): #Die Rolle beschreibt von wem die Nachricht kommt und wird mit dem Streamlit widget direkt auch so angezeigt
         st.markdown(message["content"]) #markdown steht für die Formatierung des codes,
 
+tempslider = 0.1*st.slider("Temprature of AI", 0, 10, 7)
+
 def get_text_embedding(input_text: str):
     embeddings_batch_response = client.embeddings.create(
           model = "mistral-embed",
-          input = input_text
+          inputs = input_text
       )
     return embeddings_batch_response.data[0].embedding
 
@@ -59,11 +61,12 @@ def ask_mistral(messages: list, pdfs_bytes: list):
     resp = client.chat.stream(
     model="open-mistral-7b",
     messages=messages,
-    max_tokens=1024)
+    max_tokens=1024,
+    temperature=tempslider)
     for chunk in resp:
         yield chunk.data.choices[0].delta.content
 
-if prompt := st.chat_input("Talk to Mistral!"):
+if prompt := st.chat_input("Sprich zu Mistral!"):
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -78,4 +81,5 @@ uploaded_file = st.file_uploader("Choose a file", type=["pdf"])  #PDF upload Coe
 if uploaded_file is not None:
     bytes_io = io.BytesIO(uploaded_file.getvalue())
     st.session_state.pdfs.append(bytes_io)
+
 
