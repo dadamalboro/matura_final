@@ -7,10 +7,12 @@ import numpy as np
 import PyPDF2
 import faiss
 
+col1, col2 = st.columns(2)
+
 api_key = "v0vFwOjSEpuLHOtcmeo78Tr4qBul3cDV" #API-Key sollte normalerweisen nicht im Code sein
 client = Mistral(api_key=api_key) #API-Key erlaubt ie Kommuniktion mit der Maschine
 
-st.title("LernKI") #Titel für Webapp
+st.title("Mr. Crocker (Dein KI-Assistent)") #Titel für Webapp
 
 if "messages" not in st.session_state: #Die Seesion-State ist der ChatVerlauf
     st.session_state.messages = [] #Erstellt eine leere Liste für den Chatverlauf, damit keine Fehler wegen einer fehlenden Liste auftauchen
@@ -20,7 +22,13 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]): #Die Rolle beschreibt von wem die Nachricht kommt und wird mit dem Streamlit widget direkt auch so angezeigt
         st.markdown(message["content"]) #markdown steht für die Formatierung des codes,
 
-tempslider = 0.1*st.slider("Temprature of AI", 0, 10, 7)
+with col2:
+    tempslider = 0.1*st.slider("Creativeness of AI", 0, 10, 7)
+
+with col1:
+    if st.button("STOP!"):
+        st.stop
+
 
 def get_text_embedding(input_text: str):
     embeddings_batch_response = client.embeddings.create(
@@ -57,7 +65,6 @@ def ask_mistral(messages: list, pdfs_bytes: list):
                 txt += page.extract_text()
             pdfs.append(txt)
         messages[-1]["content"] = rag_pdf(pdfs, messages[-1]["content"]) + "\n\n" + messages[-1]["content"]
-
     resp = client.chat.stream(
     model="open-mistral-7b",
     messages=messages,
@@ -69,7 +76,7 @@ def ask_mistral(messages: list, pdfs_bytes: list):
 if prompt := st.chat_input("Sprich zu Mistral!"):
     with st.chat_message("user"):
         st.markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": prompt, "safe_prompt": True})
 
     with st.chat_message("assistant"):
         response_generator = ask_mistral(st.session_state.messages, st.session_state.pdfs)
@@ -81,5 +88,6 @@ uploaded_file = st.file_uploader("Choose a file", type=["pdf"])  #PDF upload Coe
 if uploaded_file is not None:
     bytes_io = io.BytesIO(uploaded_file.getvalue())
     st.session_state.pdfs.append(bytes_io)
+
 
 
