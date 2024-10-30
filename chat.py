@@ -23,22 +23,22 @@ for message in st.session_state.messages:
         st.markdown(message["content"]) #markdown steht für die Formatierung des codes,
 
 with col2:
-    tempslider = 0.1*st.slider("Creativeness of AI", 0, 10, 7)
+    tempslider = 0.1*st.slider("Creativeness of AI", 0, 10, 7) #Hier ist der Slider welcher die Kretivität der KI bestimmt
 
 with col1:
-    if st.button("STOP!"):
+    if st.button("STOP!"):     #Hier ist der Stop-Knopf programmiert
         st.stop
 
 
-def get_text_embedding(input_text: str):
-    embeddings_batch_response = client.embeddings.create(
+def get_text_embedding(input_text: str):  #Das hier ist der Code, welcher von MistralAI vorprogrammiert ist, er ermöglicht mithilfe der MistralAI API eine Worteinbettung macht
+    embeddings_batch_response = client.embeddings.create(  #Embeddings/Worteinbettungen ermöglichen NLPs besseres Verständnis/Kontextualisierung des Textes
           model = "mistral-embed",
           inputs = input_text
       )
     return embeddings_batch_response.data[0].embedding
 
 
-def rag_pdf(pdfs: list, question: str) -> str:
+def rag_pdf(pdfs: list, question: str) -> str:  #Hier findet der RAG Prozess des PDFs statt
     chunk_size = 4096
     chunks = []
     for pdf in pdfs:
@@ -55,8 +55,8 @@ def rag_pdf(pdfs: list, question: str) -> str:
     text_retrieved = "\n\n".join(retrieved_chunk)
     return text_retrieved
 
-def ask_mistral(messages: list, pdfs_bytes: list):
-    if pdfs_bytes:
+def ask_mistral(messages: list, pdfs_bytes: list):  #Hier ist die Funktion welche die Anfrage/UserFrage an den MistralAI API geschickt
+    if pdfs_bytes:  #PDF-Anfrage Teil
         pdfs = []
         for pdf in pdfs_bytes:
             reader = PyPDF2.PdfReader(pdf)
@@ -67,13 +67,13 @@ def ask_mistral(messages: list, pdfs_bytes: list):
         messages[-1]["content"] = rag_pdf(pdfs, messages[-1]["content"]) + "\n\n" + messages[-1]["content"]
     resp = client.chat.stream(
     model="open-mistral-7b",
-    messages=messages,
-    max_tokens=1024,
-    temperature=tempslider)
-    for chunk in resp:
+    messages=messages, #Textmessage Teil
+    max_tokens=2048,  #EIn Maximallimit zu setzten ist immer schlau, falls ein Error passiert hat man so ein Sicherungsnetz, dass es nicht zu viele Tokens aufbraucht
+    temperature=tempslider) #Hier wird die Temperaturwert an die Maschine geschickt
+    for chunk in resp:          #Hier wird die Antwort ausgelesen
         yield chunk.data.choices[0].delta.content
 
-if prompt := st.chat_input("Sprich zu Mistral!"):
+if prompt := st.chat_input("Sprich zu Mistral!"):  #Hier ist die ChatBar mit welcher der User im UI inteagiert
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt, "safe_prompt": True})
