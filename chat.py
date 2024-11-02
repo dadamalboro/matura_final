@@ -9,7 +9,7 @@ import faiss
 
 col1, col2 = st.columns(2)
 
-api_key = "v0vFwOjSEpuLHOtcmeo78Tr4qBul3cDV" #API-Key sollte normalerweisen nicht im Code sein
+api_key = "Gj7JfePqwQ4IZqFm8CbjsDYgTjnjd5a9" #API-Key sollte normalerweisen nicht im Code sein
 client = Mistral(api_key=api_key) #API-Key erlaubt ie Kommuniktion mit der Maschine
 
 st.title("Mr. Crocker (Dein KI-Assistent)") #Titel für Webapp
